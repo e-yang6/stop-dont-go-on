@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import emailjs from '@emailjs/browser';
 import CameraFeed, { CameraFeedRef } from './components/CameraFeed'; // Import CameraFeedRef
 import Button from './components/Button';
 
@@ -21,15 +22,56 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
+const EMAILJS_SERVICE_ID = 'service_22syqfk';
+const EMAILJS_TEMPLATE_ID = 'template_gexv4pn';
+const EMAILJS_PUBLIC_KEY = 'nxGhSxIbgPLd4Rh9M';
+const MAX_EMAILJS_VARIABLE_SIZE_BYTES = 50 * 1024; // 50KB limit imposed by EmailJS
+const MAX_SCREENSHOT_WIDTH = 640;
+const MAX_SCREENSHOT_HEIGHT = 480;
+
+const compressCanvasToBase64 = async (canvas: HTMLCanvasElement) => {
+  const mimeType = 'image/jpeg';
+  let quality = 0.8;
+
+  while (quality >= 0.2) {
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (result) => {
+          if (result) {
+            resolve(result);
+          } else {
+            reject(new Error('failed to capture screenshot.'));
+          }
+        },
+        mimeType,
+        quality
+      );
+    });
+
+    const base64 = await blobToBase64(blob);
+    const approxBytes = Math.ceil((base64.length * 3) / 4); // Rough conversion from base64 length to bytes
+
+    if (approxBytes <= MAX_EMAILJS_VARIABLE_SIZE_BYTES) {
+      return { base64, mimeType };
+    }
+
+    quality -= 0.15; // Reduce quality and try again
+  }
+
+  throw new Error('screenshot is too large to send via email. try reducing the camera resolution.');
+};
+
 function App() {
   const [emails, setEmails] = useState<string[]>([]); // Removed example email
   const [newEmail, setNewEmail] = useState<string>('');
   const [emailError, setEmailError] = useState<string | null>(null);
   const [showEmailSentNotification, setShowEmailSentNotification] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const sendEmailTimer = useRef<number | null>(null);
   const cameraRef = useRef<CameraFeedRef>(null); // Ref for CameraFeed component
   const lastEmailSendTime = useRef<number>(0);
   const emailCooldownMs = 10000; // 10 seconds cooldown for sending emails
+  const emailsRef = useRef<string[]>([]);
 
   const handleAddEmail = () => {
     if (newEmail.trim() === '') {
@@ -44,40 +86,36 @@ function App() {
       setEmailError('this email is already on the list.');
       return;
     }
-    setEmails([...emails, newEmail.toLowerCase()]);
+    setEmails(prev => [...prev, newEmail.toLowerCase()]);
     setNewEmail('');
     setEmailError(null);
   };
 
   const handleRemoveEmail = (emailToRemove: string) => {
-    setEmails(emails.filter(email => email !== emailToRemove));
+    setEmails(prev => prev.filter(email => email !== emailToRemove));
   };
 
-  const simulateEmailSend = (subject: string, body: string, attachment?: string) => {
-    if (emails.length === 0) {
-      alert('no email recipients added to send to.');
-      return;
-    }
-    console.log('--- simulated email sent ---');
-    console.log(`to: ${emails.join(', ')}`);
-    console.log(`subject: ${subject}`);
-    console.log(`body: ${body}`);
-    if (attachment) {
-      console.log('attachment: [base64 image data]');
-      // In a real app, you'd integrate with an email API here.
-      // For demonstration, we'll log a snippet of the base64 data.
-      console.log(`data:image/png;base64,${attachment.substring(0, 50)}...`);
-    }
-    console.log('---------------------------');
-    setShowEmailSentNotification(true);
+  useEffect(() => {
+    emailjs.init({
+      publicKey: EMAILJS_PUBLIC_KEY,
+    });
+  }, []);
 
-    if (sendEmailTimer.current) {
-      clearTimeout(sendEmailTimer.current);
-    }
-    sendEmailTimer.current = window.setTimeout(() => {
-      setShowEmailSentNotification(false);
-      sendEmailTimer.current = null;
-    }, 3000); // Notification disappears after 3 seconds
+  useEffect(() => {
+    emailsRef.current = emails;
+  }, [emails]);
+
+  const sendEmailsWithScreenshot = async (recipients: string[], base64Image: string, mimeType: string) => {
+    const base64ImageWithPrefix = `data:${mimeType};base64,${base64Image}`;
+
+    await Promise.all(
+      recipients.map((recipient) =>
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email: recipient,
+          screenshot: base64ImageWithPrefix,
+        })
+      )
+    );
   };
 
   const sendScreenshotEmail = async () => {
@@ -88,37 +126,64 @@ function App() {
     }
     setEmailError(null); // Clear previous errors
 
+    const recipients = emailsRef.current;
+
     const videoElement = cameraRef.current?.getVideoElement();
     if (!videoElement || videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
       setEmailError('camera is not active or video feed is not ready.');
       return;
     }
 
-    if (emails.length === 0) {
+    if (recipients.length === 0) {
       setEmailError('no email recipients added.');
       return;
     }
 
     const canvas = document.createElement('canvas');
-    canvas.width = videoElement.videoWidth;
-    canvas.height = videoElement.videoHeight;
+    const { videoWidth, videoHeight } = videoElement;
+
+    const widthRatio = MAX_SCREENSHOT_WIDTH / videoWidth;
+    const heightRatio = MAX_SCREENSHOT_HEIGHT / videoHeight;
+    const scale = Math.min(1, widthRatio, heightRatio);
+
+    const targetWidth = Math.round(videoWidth * scale);
+    const targetHeight = Math.round(videoHeight * scale);
+
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       setEmailError('could not get canvas context for image capture.');
       return;
     }
 
-    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(videoElement, 0, 0, targetWidth, targetHeight);
 
-    canvas.toBlob(async (blob) => {
-      if (!blob) {
-        setEmailError('failed to capture screenshot.');
-        return;
-      }
-      const base64Image = await blobToBase64(blob);
-      simulateEmailSend('screenshot from webcam', 'here is a screenshot from the webcam.', base64Image);
+    try {
+      setIsSending(true);
+      const { base64, mimeType } = await compressCanvasToBase64(canvas);
+      await sendEmailsWithScreenshot(recipients, base64, mimeType);
+
+      setShowEmailSentNotification(true);
       lastEmailSendTime.current = now; // Update last send time
-    }, 'image/png', 1); // Capture as PNG with full quality
+
+      if (sendEmailTimer.current) {
+        clearTimeout(sendEmailTimer.current);
+      }
+      sendEmailTimer.current = window.setTimeout(() => {
+        setShowEmailSentNotification(false);
+        sendEmailTimer.current = null;
+      }, 3000); // Notification disappears after 3 seconds
+    } catch (err) {
+      console.error('error sending email via emailjs:', err);
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : 'failed to send email via emailjs.';
+      setEmailError(message);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   useEffect(() => {
@@ -129,7 +194,8 @@ function App() {
     };
   }, []);
 
-  const isSendButtonDisabled = emails.length === 0 || (Date.now() - lastEmailSendTime.current < emailCooldownMs);
+  const isSendButtonDisabled =
+    isSending || emails.length === 0 || (Date.now() - lastEmailSendTime.current < emailCooldownMs);
 
   return (
     <div className="max-w-6xl w-full mx-auto py-10 px-8 flex flex-col items-center gap-10">
@@ -138,7 +204,7 @@ function App() {
       <CameraFeed ref={cameraRef} />
 
       <Button onClick={sendScreenshotEmail} disabled={isSendButtonDisabled}>
-        send screenshot email
+        {isSending ? 'sending...' : 'send screenshot email'}
       </Button>
 
       <div className="w-full flex flex-col items-center gap-4">

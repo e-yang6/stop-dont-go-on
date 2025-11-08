@@ -7,7 +7,15 @@ export default defineConfig(({ mode }) => {
     return {
       server: {
         port: 3000,
-        host: '0.0.0.0',
+        host: 'localhost', // Changed from '0.0.0.0' to 'localhost' for secure context
+        // To enable HTTPS (recommended for camera access):
+        // 1. Install mkcert: https://github.com/FiloSottile/mkcert
+        // 2. Run: mkcert -install && mkcert localhost
+        // 3. Uncomment the https config below:
+        // https: {
+        //   key: fs.readFileSync('localhost-key.pem'),
+        //   cert: fs.readFileSync('localhost.pem'),
+        // },
       },
       plugins: [react()],
       define: {

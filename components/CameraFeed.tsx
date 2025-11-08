@@ -42,11 +42,43 @@ const CameraFeed = forwardRef<CameraFeedRef, {}>((props, ref) => {
         mediaStreamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          await videoRef.current.play(); // Start playing the video stream.
+          try {
+            await videoRef.current.play(); // Start playing the video stream.
+          } catch (playErr) {
+            if (
+              playErr instanceof DOMException &&
+              playErr.name === 'AbortError'
+            ) {
+              // Ignore abort errors triggered by the browser when stopping the media resource.
+              console.debug('camera playback aborted by browser request');
+            } else {
+              console.warn('unable to start camera playback:', playErr);
+            }
+          }
         }
       } catch (err) {
         console.error('error accessing camera:', err);
-        setError('could not access camera. please ensure it is connected and permissions are granted.');
+        
+        // Provide more specific error messages based on the error type
+        let errorMessage = '';
+        
+        if (err instanceof Error) {
+          if (err.name === 'NotAllowedError') {
+            errorMessage = 'permission denied. please allow camera access in browser settings.';
+          } else if (err.name === 'NotFoundError') {
+            errorMessage = 'no camera found. please connect a camera.';
+          } else if (err.name === 'NotReadableError') {
+            errorMessage = 'camera is already in use by another application.';
+          } else if (err.name === 'NotSecureError' || (typeof err.message === 'string' && err.message.toLowerCase().includes('secure'))) {
+            errorMessage = 'access must be via https or localhost. try accessing via http://localhost:3000';
+          } else {
+            errorMessage = err.message || 'unexpected camera error.';
+          }
+        } else {
+          errorMessage = 'unexpected camera error.';
+        }
+        
+        setError(errorMessage);
       }
     };
 
