@@ -17,7 +17,7 @@ export interface CameraFeedRef {
  * @description A React component that displays a live camera feed.
  * It automatically starts the camera on mount and stops it on unmount.
  * @param {object} props - No props are currently accepted.
- * @param {React.Ref<CameraFeedRef>} ref - A ref to access CameraFeedRef methods.
+ * @param {React.Ref<CameraFeedRef>} ref - A ref to access CameraFeedRef methods  
  */
 const CameraFeed = forwardRef<CameraFeedRef, {}>((props, ref) => {
   const videoRef = useRef<HTMLVideoElement>(null);

@@ -62,7 +62,7 @@ const compressCanvasToBase64 = async (canvas: HTMLCanvasElement) => {
 };
 
 function App() {
-  const [emails, setEmails] = useState<string[]>([]); // Removed example email
+  const [emails, setEmails] = useState<string[]>([]);
   const [newEmail, setNewEmail] = useState<string>('');
   const [emailError, setEmailError] = useState<string | null>(null);
   const [showEmailSentNotification, setShowEmailSentNotification] = useState(false);
@@ -71,7 +71,6 @@ function App() {
   const cameraRef = useRef<CameraFeedRef>(null); // Ref for CameraFeed component
   const lastEmailSendTime = useRef<number>(0);
   const emailCooldownMs = 10000; // 10 seconds cooldown for sending emails
-  const emailsRef = useRef<string[]>([]);
 
   const handleAddEmail = () => {
     if (newEmail.trim() === '') {
@@ -86,13 +85,18 @@ function App() {
       setEmailError('this email is already on the list.');
       return;
     }
-    setEmails(prev => [...prev, newEmail.toLowerCase()]);
+    const normalized = newEmail.toLowerCase();
+    setEmails(prev => {
+      return [...prev, normalized];
+    });
     setNewEmail('');
     setEmailError(null);
   };
 
   const handleRemoveEmail = (emailToRemove: string) => {
-    setEmails(prev => prev.filter(email => email !== emailToRemove));
+    setEmails(prev => {
+      return prev.filter(email => email !== emailToRemove);
+    });
   };
 
   useEffect(() => {
@@ -100,10 +104,6 @@ function App() {
       publicKey: EMAILJS_PUBLIC_KEY,
     });
   }, []);
-
-  useEffect(() => {
-    emailsRef.current = emails;
-  }, [emails]);
 
   const sendEmailsWithScreenshot = async (recipients: string[], base64Image: string, mimeType: string) => {
     const base64ImageWithPrefix = `data:${mimeType};base64,${base64Image}`;
@@ -126,7 +126,7 @@ function App() {
     }
     setEmailError(null); // Clear previous errors
 
-    const recipients = emailsRef.current;
+    const recipients = [...emails];
 
     const videoElement = cameraRef.current?.getVideoElement();
     if (!videoElement || videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
