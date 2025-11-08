@@ -109,7 +109,7 @@ const CameraFeed = forwardRef<CameraFeedRef, {}>((props, ref) => {
     <div className="w-full max-w-3xl aspect-video relative rounded-xl shadow-2xl overflow-hidden">
       <video
         ref={videoRef}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover transform scale-x-[-1]"
         autoPlay
         playsInline
         muted
