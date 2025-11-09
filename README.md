@@ -23,6 +23,14 @@ This project is a “gooning accountability” web app. When it senses you gooni
 
 ---
 
+## Tech Stack
+
+- **Frontend:** React 19 + Vite + TypeScript, with EmailJS for sending alerts and modern browser APIs for camera/mic access.
+- **Backend (optional):** Python 3 with Flask, OpenCV, PySerial, and Pygame to handle face tracking, Arduino commands, and audio cues.
+- **Hardware (optional):** Arduino-compatible board driving two servos—one for keeping the camera centered, another tied to the water sprayer.
+
+---
+
 ## How To Try It
 
 1. **Install everything once**
