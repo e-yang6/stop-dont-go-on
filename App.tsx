@@ -748,7 +748,7 @@ function App() {
   // Face centering API functions
   const checkFaceCenteringConnection = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:5006/api/status');
+      const response = await fetch('http://localhost:5007/api/status');
       const data = await response.json();
       setFaceCenteringConnected(true);
       setFaceCenteringTracking(data.tracking_active);
@@ -760,7 +760,7 @@ function App() {
 
   const startFaceCentering = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:5006/api/start_tracking', {
+      const response = await fetch('http://localhost:5007/api/start_tracking', {
         method: 'POST'
       });
       const data = await response.json();
@@ -775,7 +775,7 @@ function App() {
 
   const triggerAlertMode = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:5006/api/start_alert', {
+      const response = await fetch('http://localhost:5007/api/start_alert', {
         method: 'POST'
       });
       const data = await response.json();
@@ -789,7 +789,7 @@ function App() {
 
   const stopAlertMode = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:5006/api/stop_alert', {
+      const response = await fetch('http://localhost:5007/api/stop_alert', {
         method: 'POST'
       });
       const data = await response.json();

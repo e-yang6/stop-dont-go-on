@@ -51,7 +51,7 @@ class FaceCenteringWithAlert:
         self.audio_thread = None
         self.audio_running = False
         self.audio_file_path = os.path.join(os.path.dirname(__file__), 'alert-audio.mp3')
-        
+
         # Initialize pygame mixer for audio
         try:
             pygame.mixer.init()
@@ -245,24 +245,24 @@ class FaceCenteringWithAlert:
     def audio_loop(self):
         """Continuous audio looping during alert"""
         logger.info("🔊 Starting audio alert loop")
-        
+
         if not os.path.exists(self.audio_file_path):
             logger.error(f"❌ Audio file not found: {self.audio_file_path}")
             return
-        
+
         try:
             # Load and play the audio file with infinite looping
             pygame.mixer.music.load(self.audio_file_path)
             pygame.mixer.music.play(-1)  # -1 means loop indefinitely
-            
+
             # Just wait while audio should be running
             while self.audio_running:
                 time.sleep(0.1)
-            
+
             # Stop audio when loop ends
             pygame.mixer.music.stop()
             logger.info("🔇 Audio alert loop stopped")
-            
+
         except Exception as e:
             logger.error(f"❌ Audio playback error: {e}")
             pygame.mixer.music.stop()  # Ensure we stop on error
@@ -319,13 +319,13 @@ class FaceCenteringWithAlert:
 
         # Stop audio
         self.audio_running = False
-        
+
         # Force stop pygame music immediately
         try:
             pygame.mixer.music.stop()
         except:
             pass
-        
+
         if self.audio_thread:
             self.audio_thread.join(timeout=3)
 
@@ -447,13 +447,13 @@ def update_settings():
 if __name__ == '__main__':
     try:
         logger.info("Starting Face Centering API with Alert Integration...")
-        logger.info("Server will run on http://0.0.0.0:5006")
-        logger.info("Access via: http://localhost:5006")
+        logger.info("Server will run on http://0.0.0.0:5007")
+        logger.info("Access via: http://localhost:5007")
 
         # Start the server with more permissive settings
         app.run(
             host='0.0.0.0',  # Accept connections from any IP
-            port=5006,  # Use port 5006 to avoid conflicts
+            port=5007,  # Use port 5007 to avoid conflicts
             debug=True,
             threaded=True,
             use_reloader=False  # Prevent double initialization in debug mode
