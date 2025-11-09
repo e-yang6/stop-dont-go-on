@@ -1,0 +1,6 @@
+opencv-python==4.8.1.78
+pyserial==3.5
+flask==2.3.3
+flask-cors==4.0.0
+numpy==1.24.3
+pygame==2.5.2

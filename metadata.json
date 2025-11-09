@@ -1,0 +1,7 @@
+{
+  "name": "stop! don't go on",
+  "description": "a playful web application with a camera feed and email recipient list. stop! don't go on.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
