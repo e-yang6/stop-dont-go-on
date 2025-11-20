@@ -1,15 +1,15 @@
 # Stop! Don’t Go On
 
-This project is a “gooning accountability” web app. When it senses you gooning, it flashes the screen, starts a countdown, and throws a quick math problem at you. If you keep going instead of solving the challenge, it snaps a photo from your webcam mid goon and emails it to the people you added as watchers. There’s optional hardware support too: an Arduino setup can keep the camera pointed at you and, during an alert, trigger a servo-powered water sprayer aimed at the user.
+This project is a bad habit accountability web app. When it senses you doing a bad habit, it flashes the screen, starts a countdown, and throws a quick math problem at you. If you keep going instead of solving the challenge, it snaps a photo from your webcam mid goon and emails it to the people you added as watchers. There’s optional hardware support too: an Arduino setup can keep the camera pointed at you and, during an alert, trigger a servo-powered water sprayer aimed at the user.
 
 ---
 
 ## In Plain Terms
 
-- **You start gooning**
+- **You start doing a bad habit**
 - **It starts a big red countdown** and makes you solve a simple math question.  
 - **Solve it in time** → everything calms down.  
-- **Miss it or keep gooning** → a webcam screenshot is taken and emailed to your chosen contacts.  
+- **Miss it or keep doing a bad habit** → a webcam screenshot is taken and emailed to your chosen contacts.  
 - **Add the Arduino extras** if you want a physical reminder that someone could be watching—complete with a servo that sprays water in your direction when the alert fires.
 
 ---
