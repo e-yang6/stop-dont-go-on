@@ -1,5 +1,7 @@
 # Stop! Don’t Go On
 
+**🔗 Demo:** https://devpost.com/software/stop-don-t-go-on
+
 This project is a bad habit accountability web app. When it senses you doing a bad habit, it flashes the screen, starts a countdown, and throws a quick math problem at you. If you keep going instead of solving the challenge, it snaps a photo from your webcam mid goon and emails it to the people you added as watchers. There’s optional hardware support too: an Arduino setup can keep the camera pointed at you and, during an alert, trigger a servo-powered water sprayer aimed at the user.
 
 ---
